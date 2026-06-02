@@ -1,0 +1,155 @@
+<div class="page">
+  <header class="page-hero">
+    <div>
+      <a routerLink="/companies" class="breadcrumb">Retour aux entreprises</a>
+      <h1>{{ company()?.nomEntreprise ?? 'Entreprise' }}</h1>
+      <p class="subtitle">{{ company()?.email }}</p>
+    </div>
+  </header>
+
+  @if (message(); as msg) {
+    <div class="alert alert-success">{{ msg }}</div>
+  }
+
+  @if (error(); as msg) {
+    <div class="alert alert-error">{{ msg }}</div>
+  }
+
+  @if (loading()) {
+    <div class="card"><p class="muted">Chargement...</p></div>
+  } @else {
+    @if (company(); as c) {
+      <section class="card-grid">
+        <div class="card">
+          <h2>Details entreprise</h2>
+          <dl class="meta-list">
+            <div><dt>Plan</dt><dd>{{ c.accountType }}</dd></div>
+            <div><dt>Telephone</dt><dd>{{ c.phone || '-' }}</dd></div>
+            <div><dt>Email verifie</dt><dd>{{ c.verified ? 'Oui' : 'Non' }}</dd></div>
+            <div><dt>Badge admin</dt><dd>{{ c.isAdminVerified ? 'Oui' : 'Non' }}</dd></div>
+            <div><dt>Statut</dt><dd>{{ c.isBlocked ? 'Bloquee' : 'Active' }}</dd></div>
+            <div><dt>Derniere connexion</dt><dd>{{ c.lastLoginAt ? (c.lastLoginAt | date: 'dd/MM/yyyy HH:mm') : '-' }}</dd></div>
+          </dl>
+        </div>
+
+        <div class="card">
+          <h2>Acces</h2>
+          @if (c.isBlocked) {
+            <p class="badge badge-danger">Bloquee</p>
+            <p class="muted">{{ c.blockReason || 'Aucune raison stockee.' }}</p>
+            <button type="button" class="btn-secondary" [disabled]="actionLoading()" (click)="unblock()">
+              Debloquer
+            </button>
+          } @else {
+            <label class="field">
+              <span>Raison du blocage</span>
+              <input [(ngModel)]="blockReason" placeholder="Abus, impaye..." />
+            </label>
+            <button type="button" class="btn-danger" [disabled]="actionLoading()" (click)="block()">
+              Bloquer l'entreprise
+            </button>
+          }
+          <hr class="divider" />
+          <button type="button" class="btn-secondary" [disabled]="actionLoading()" (click)="toggleVerified()">
+            {{ c.isAdminVerified ? 'Retirer le badge verifie' : 'Marquer comme verifiee' }}
+          </button>
+        </div>
+
+        <!-- ── Plan switcher ── -->
+        <div class="card">
+          <h2>Changer le plan</h2>
+          @if (company(); as c) {
+            <p class="stat-inline">Plan actuel : <strong>{{ c.accountType }}</strong></p>
+          }
+          <label class="field">
+            <span>Nouveau plan</span>
+            <select [(ngModel)]="selectedPlan">
+              <option value="">-- Sélectionner --</option>
+              @for (p of PLANS; track p.value) {
+                <option [value]="p.value">{{ p.label }}{{ p.badge ? ' ★' : '' }}</option>
+              }
+            </select>
+          </label>
+
+          <!-- Plan preview card shown when a plan is selected -->
+          @if (selectedPlanMeta; as meta) {
+            <div class="plan-preview">
+              <div class="plan-preview-header">
+                <span class="plan-preview-name">{{ meta.label }}</span>
+                @if (meta.badge) {
+                  <span class="plan-preview-badge">{{ meta.badge }}</span>
+                }
+                <span class="plan-preview-price">{{ meta.price }}</span>
+              </div>
+              <div class="plan-preview-stats">
+                <div class="plan-stat">
+                  <span class="plan-stat-icon">🪙</span>
+                  <div>
+                    <span class="plan-stat-value">{{ meta.credits }}</span>
+                    <span class="plan-stat-label">crédits / mois</span>
+                  </div>
+                </div>
+                <div class="plan-stat">
+                  <span class="plan-stat-icon">👤</span>
+                  <div>
+                    <span class="plan-stat-value">{{ meta.seats }}</span>
+                    <span class="plan-stat-label">{{ meta.seats > 1 ? 'sièges' : 'siège' }}</span>
+                  </div>
+                </div>
+                <div class="plan-stat">
+                  <span class="plan-stat-icon">🏷️</span>
+                  <div>
+                    <span class="plan-stat-value">{{ meta.accountType }}</span>
+                    <span class="plan-stat-label">accountType</span>
+                  </div>
+                </div>
+              </div>
+              <div class="plan-credit-breakdown">
+                <span class="pcb-item" title="1 crédit = 1 recherche de 2 candidats">🔍 ~{{ (meta.credits / 2) | number:'1.0-0' }} recherches</span>
+                <span class="pcb-sep">·</span>
+                <span class="pcb-item" title="1 email = 1 crédit">📧 ~{{ meta.credits }} emails</span>
+                <span class="pcb-sep">·</span>
+                <span class="pcb-item" title="1 téléphone = 10 crédits">📞 ~{{ (meta.credits / 10) | number:'1.0-0' }} téléphones</span>
+              </div>
+            </div>
+          }
+
+          <label class="field">
+            <span>Expiration (optionnel)</span>
+            <input type="datetime-local" [(ngModel)]="planExpiresAt" />
+          </label>
+          <button type="button" class="btn-primary" [disabled]="actionLoading() || !selectedPlan" (click)="changePlan()">
+            Appliquer le plan
+          </button>
+        </div>
+
+        <div class="card">
+          <h2>Crédits sourcing</h2>
+          @if (credits(); as cr) {
+            <p class="stat-inline">Solde : <strong>{{ cr.creditsAvailable }}</strong></p>
+            <dl class="meta-list compact-meta">
+              <div><dt>Achetes</dt><dd>{{ cr.totalCreditsPurchased }}</dd></div>
+              <div><dt>Utilises</dt><dd>{{ cr.totalCreditsUsed }}</dd></div>
+            </dl>
+          }
+          <label class="field">
+            <span>Montant</span>
+            <input type="number" [(ngModel)]="creditAmount" min="1" step="0.25" />
+          </label>
+          <label class="field">
+            <span>Raison</span>
+            <input [(ngModel)]="creditReason" />
+          </label>
+          <div class="button-row">
+            <button type="button" class="btn-primary" [disabled]="actionLoading()" (click)="grantCredits()">
+              Ajouter des credits
+            </button>
+            <button type="button" class="btn-secondary" [disabled]="actionLoading()" (click)="deductCredits()">
+              Retirer
+            </button>
+          </div>
+        </div>
+      </section>
+    }
+  }
+</div>

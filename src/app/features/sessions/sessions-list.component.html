@@ -1,0 +1,72 @@
+<div class="page">
+  <header class="page-hero">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Recherches & prompts</h1>
+      <p class="subtitle">Prompts utilisateurs et filtres générés par l'IA.</p>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <label class="search-field">
+      <span aria-hidden="true">⌕</span>
+      <input
+        type="search"
+        [ngModel]="search()"
+        (ngModelChange)="applySearch($event)"
+        placeholder="Rechercher dans les prompts…"
+      />
+    </label>
+    <select
+      class="select-field"
+      [ngModel]="searchOrigin()"
+      (ngModelChange)="router.navigate([], { relativeTo: route, queryParams: { searchOrigin: $event || null, page: 1 }, queryParamsHandling: 'merge' })"
+    >
+      <option value="">Toutes origines</option>
+      <option value="prompt">Prompt IA</option>
+      <option value="filters">Filtres manuels</option>
+    </select>
+  </div>
+
+  <section class="card">
+    @if (loading()) {
+      <p class="muted">Chargement…</p>
+    } @else if (items().length === 0) {
+      <p class="muted">Aucune recherche.</p>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Entreprise</th>
+            <th>Prompt</th>
+            <th>Origine</th>
+            <th>Résultats</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of items(); track s.id) {
+            <tr>
+              <td>
+                <strong>{{ s.companyName ?? '—' }}</strong>
+                <div class="cell-sub">{{ s.companyEmail }}</div>
+              </td>
+              <td class="prompt-cell">{{ s.userPrompt ?? s.summary ?? '—' }}</td>
+              <td><span class="badge badge-muted">{{ s.searchOrigin }}</span></td>
+              <td>{{ s.resultCount }} / {{ s.providerMatchTotal }}</td>
+              <td>{{ s.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td><a [routerLink]="['/sessions', s.id]" class="link-action">Voir →</a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <app-pagination
+        [page]="page()"
+        [totalPages]="totalPages()"
+        [total]="total()"
+        (pageChange)="onPageChange($event)"
+      />
+    }
+  </section>
+</div>

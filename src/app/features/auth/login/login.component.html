@@ -1,0 +1,38 @@
+<div class="login-page">
+  <div class="login-card">
+    <img src="assets/images/logo/worku-header-logo.svg" alt="Worku" class="login-logo" />
+    <p class="login-badge">Plateforme Admin</p>
+    <h1>Connexion opérateur</h1>
+    <p class="login-sub">
+      Utilisez un email autorisé dans <code>PLATFORM_ADMIN_EMAILS</code>.
+    </p>
+
+    @if (adminError()) {
+      <div class="alert alert-error">Accès admin requis pour ce compte.</div>
+    }
+
+    @if (error(); as msg) {
+      <div class="alert alert-error">{{ msg }}</div>
+    }
+
+    @if (step === 'email') {
+      <label class="field">
+        <span>Email</span>
+        <input type="email" [(ngModel)]="email" placeholder="contact@worku.tn" (keyup.enter)="sendOtp()" />
+      </label>
+      <button type="button" class="btn-primary" [disabled]="loading()" (click)="sendOtp()">
+        {{ loading() ? 'Envoi…' : 'Recevoir le code OTP' }}
+      </button>
+    } @else {
+      <p class="otp-hint">Code envoyé à <strong>{{ email }}</strong></p>
+      <label class="field">
+        <span>Code OTP</span>
+        <input type="text" [(ngModel)]="otp" placeholder="123456" maxlength="8" (keyup.enter)="verify()" />
+      </label>
+      <button type="button" class="btn-primary" [disabled]="loading()" (click)="verify()">
+        {{ loading() ? 'Vérification…' : 'Se connecter' }}
+      </button>
+      <button type="button" class="btn-ghost" (click)="back()">Changer d'email</button>
+    }
+  </div>
+</div>

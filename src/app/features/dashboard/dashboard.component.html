@@ -1,0 +1,69 @@
+<div class="page">
+  <header class="page-hero">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Tableau de bord</h1>
+      <p class="subtitle">Vue d'ensemble de la plateforme Worku.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="card loading-card">Chargement…</div>
+  } @else {
+    <section class="stats-grid">
+      <a routerLink="/companies" class="stat-card">
+        <span class="stat-label">Entreprises</span>
+        <span class="stat-value">{{ companiesTotal() }}</span>
+      </a>
+      <a routerLink="/companies" [queryParams]="{ isBlocked: 'true' }" class="stat-card stat-danger">
+        <span class="stat-label">Bloquées</span>
+        <span class="stat-value">{{ blockedCompanies() }}</span>
+      </a>
+      <a routerLink="/sessions" class="stat-card">
+        <span class="stat-label">Recherches</span>
+        <span class="stat-value">{{ sessionsTotal() }}</span>
+      </a>
+      <a routerLink="/credits" class="stat-card">
+        <span class="stat-label">Crédits (top 100)</span>
+        <span class="stat-value">{{ creditsTotal() }}</span>
+      </a>
+    </section>
+
+    <section class="card-grid">
+      <div class="card">
+        <h2>Système</h2>
+        <dl class="meta-list">
+          <div><dt>Version prompt filtres</dt><dd>{{ promptVersion() || '—' }}</dd></div>
+          <div><dt>Ordre providers</dt><dd>{{ providerOrder().join(' → ') || '—' }}</dd></div>
+        </dl>
+      </div>
+
+      <div class="card">
+        <h2>Clés API par provider</h2>
+        @if (providerStats().length === 0) {
+          <p class="muted">Aucune clé configurée.</p>
+        } @else {
+          <table class="data-table compact">
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>Actives</th>
+                <th>En échec</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of providerStats(); track s.providerId) {
+                <tr>
+                  <td>{{ s.providerId }}</td>
+                  <td>{{ s.activeKeys }}/{{ s.totalKeys }}</td>
+                  <td>{{ s.failingKeys }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+        <a routerLink="/providers" class="link-action">Gérer les clés →</a>
+      </div>
+    </section>
+  }
+</div>

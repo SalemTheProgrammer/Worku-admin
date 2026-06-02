@@ -1,0 +1,29 @@
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-danger .stat-value {
+  color: var(--danger);
+}
+
+.link-action {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.compact th,
+.compact td {
+  padding: 8px 10px;
+}

@@ -1,0 +1,67 @@
+<div class="page">
+  <header class="page-hero">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Crédits sourcing</h1>
+      <p class="subtitle">Soldes et consommation par entreprise.</p>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <label class="search-field">
+      <span aria-hidden="true">⌕</span>
+      <input
+        type="search"
+        [ngModel]="search()"
+        (ngModelChange)="applySearch($event)"
+        placeholder="Entreprise ou email…"
+      />
+    </label>
+  </div>
+
+  <section class="card">
+    @if (loading()) {
+      <p class="muted">Chargement…</p>
+    } @else if (items().length === 0) {
+      <p class="muted">Aucun solde.</p>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Entreprise</th>
+            <th>Disponibles</th>
+            <th>Achetés</th>
+            <th>Utilisés</th>
+            <th>Dernière utilisation</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of items(); track c.id) {
+            <tr>
+              <td>
+                <strong>{{ c.nomEntreprise ?? '—' }}</strong>
+                <div class="cell-sub">{{ c.email }}</div>
+              </td>
+              <td><strong>{{ c.creditsAvailable }}</strong></td>
+              <td>{{ c.totalCreditsPurchased }}</td>
+              <td>{{ c.totalCreditsUsed }}</td>
+              <td>{{ c.lastUsageAt ? (c.lastUsageAt | date: 'dd/MM/yyyy') : '—' }}</td>
+              <td>
+                @if (c.companyId) {
+                  <a [routerLink]="['/companies', c.companyId]" class="link-action">Gérer →</a>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <app-pagination
+        [page]="page()"
+        [totalPages]="totalPages()"
+        [total]="total()"
+        (pageChange)="onPageChange($event)"
+      />
+    }
+  </section>
+</div>

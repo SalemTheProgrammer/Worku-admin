@@ -1,0 +1,35 @@
+<aside class="sidebar-root">
+  <div class="sidebar-card">
+    <div class="rail-top">
+      <a routerLink="/dashboard" class="logo-orb" aria-label="Worku Admin">
+        <img class="logo-img" src="assets/images/logo/worku-sidebar-logo.png" alt="Worku" />
+      </a>
+    </div>
+
+    <nav class="rail-nav" aria-label="Navigation admin">
+      @for (item of navItems; track item.route) {
+        <a
+          [routerLink]="item.route"
+          class="rail-link"
+          [class.active]="isActive(item.route)"
+          [attr.aria-current]="isActive(item.route) ? 'page' : null"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" [attr.d]="item.icon" />
+          </svg>
+          <span class="rail-label">{{ item.title }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="rail-bottom">
+      @if (auth.email(); as email) {
+        <div class="user-chip">
+          <span class="user-dot"></span>
+          <span class="user-email">{{ email }}</span>
+        </div>
+      }
+      <button type="button" class="logout-btn" (click)="onLogout()">Déconnexion</button>
+    </div>
+  </div>
+</aside>

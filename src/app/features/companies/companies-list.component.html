@@ -1,0 +1,102 @@
+<div class="page">
+  <header class="page-hero">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Entreprises</h1>
+      <p class="subtitle">{{ total() }} entreprise(s) — gérer l'accès, la vérification et les crédits.</p>
+    </div>
+  </header>
+
+  @if (deleteMsg(); as msg) {
+    <div class="alert" [class.alert-success]="msg.startsWith('✓')" [class.alert-error]="msg.startsWith('✗')">{{ msg }}</div>
+  }
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <label class="search-field">
+      <span aria-hidden="true">⌕</span>
+      <input type="search" [ngModel]="search()" (ngModelChange)="applySearch($event)" placeholder="Nom ou email…" />
+    </label>
+
+    <select class="select-field" [ngModel]="filterAccountType()" (ngModelChange)="applyFilter('accountType', $event)">
+      <option value="">Tous les plans</option>
+      @for (t of ACCOUNT_TYPES; track t) { <option [value]="t">{{ t }}</option> }
+    </select>
+
+    <select class="select-field" [ngModel]="filterBlocked()" (ngModelChange)="applyFilter('isBlocked', $event)">
+      <option value="">Statut : tous</option>
+      <option value="false">Active</option>
+      <option value="true">Bloquée</option>
+    </select>
+
+    <select class="select-field" [ngModel]="filterVerified()" (ngModelChange)="applyFilter('verified', $event)">
+      <option value="">Vérification : tous</option>
+      <option value="true">Vérifiée ✓</option>
+      <option value="false">Non vérifiée</option>
+    </select>
+
+    <button class="btn-ghost" (click)="clearFilters()">✕ Réinitialiser</button>
+  </div>
+
+  <!-- Bulk actions -->
+  @if (selected().size > 0) {
+    <div class="bulk-bar">
+      <span>{{ selected().size }} sélectionnée(s)</span>
+      <button class="btn-danger-sm" (click)="bulkDelete()">🗑 Supprimer la sélection</button>
+    </div>
+  }
+
+  <section class="card">
+    @if (loading()) {
+      <p class="muted">Chargement…</p>
+    } @else if (items().length === 0) {
+      <p class="muted">Aucune entreprise trouvée.</p>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="th-check">
+              <input type="checkbox" [checked]="allSelected" (change)="toggleAll()" />
+            </th>
+            <th>Entreprise</th>
+            <th>Email</th>
+            <th>Plan</th>
+            <th>Statut</th>
+            <th>Inscription</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of items(); track c.id) {
+            <tr [class.row-selected]="isSelected(c.id)">
+              <td class="th-check">
+                <input type="checkbox" [checked]="isSelected(c.id)" (change)="toggleSelect(c.id)" />
+              </td>
+              <td>
+                <strong>{{ c.nomEntreprise }}</strong>
+                @if (c.isAdminVerified) { <span class="badge badge-good">Vérifiée</span> }
+              </td>
+              <td>{{ c.email }}</td>
+              <td><span class="badge badge-muted">{{ c.accountType }}</span></td>
+              <td>
+                @if (c.isBlocked) {
+                  <span class="badge badge-danger">Bloquée</span>
+                } @else {
+                  <span class="badge badge-muted">Active</span>
+                }
+              </td>
+              <td>{{ c.createdAt | date: 'dd/MM/yyyy' }}</td>
+              <td>
+                <div class="row-actions-inline">
+                  <a [routerLink]="['/companies', c.id]" class="link-action">Détails →</a>
+                  <button class="ia-btn ia-danger" (click)="deleteOne(c.id, c.nomEntreprise)" title="Supprimer">🗑</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <app-pagination [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="onPageChange($event)" />
+    }
+  </section>
+</div>

@@ -1,0 +1,39 @@
+<div class="page">
+  <header class="page-hero">
+    <div>
+      <a routerLink="/sessions" class="breadcrumb">Retour aux recherches</a>
+      <h1>Detail recherche</h1>
+      <p class="subtitle">{{ session()?.companyName }} - {{ session()?.searchOrigin }}</p>
+    </div>
+    <a [routerLink]="['/candidates']" [queryParams]="{ sessionId: route.snapshot.paramMap.get('id') }" class="btn-secondary">
+      Voir candidats
+    </a>
+  </header>
+
+  @if (loading()) {
+    <div class="card"><p class="muted">Chargement...</p></div>
+  } @else {
+    <section class="card-grid">
+      <div class="card">
+        <h2>Prompt utilisateur</h2>
+        <pre class="code-block">{{ prompt()?.userPrompt ?? session()?.userPrompt ?? '-' }}</pre>
+        <p class="muted">Version filtres : {{ prompt()?.filterPromptVersion ?? session()?.filterPromptVersion ?? '-' }}</p>
+      </div>
+
+      <div class="card">
+        <h2>Filtres IA</h2>
+        <pre class="code-block">{{ searchFilters() | json }}</pre>
+      </div>
+
+      <div class="card">
+        <h2>Metadonnees</h2>
+        <dl class="meta-list">
+          <div><dt>Resultats charges</dt><dd>{{ session()?.resultCount }}</dd></div>
+          <div><dt>Provider total</dt><dd>{{ session()?.providerMatchTotal }}</dd></div>
+          <div><dt>Type</dt><dd>{{ session()?.type }}</dd></div>
+          <div><dt>Creee le</dt><dd>{{ session()?.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+        </dl>
+      </div>
+    </section>
+  }
+</div>
