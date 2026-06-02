@@ -21,12 +21,14 @@ const PROVIDER_LABELS: Record<string, string> = {
   contactout: 'ContactOut',
   fullenrich: 'FullEnrich',
   openai: 'OpenAI',
+  peopledatalabs: 'People Data Labs',
 };
 
 const PROVIDER_DOCS: Record<string, string> = {
   contactout: 'https://api.contactout.com/',
   fullenrich: 'https://docs.fullenrich.com/api/v2/general/credit',
   openai: 'https://platform.openai.com/docs/api-reference/usage',
+  peopledatalabs: 'https://docs.peopledatalabs.com/docs/company-search-api',
 };
 
 
@@ -79,7 +81,9 @@ export class ProvidersListComponent implements OnInit {
   readonly Math = Math;
 
   readonly providerOptions = computed(() =>
-    this.activeTab() === 'ai' ? ['openai'] : ['contactout', 'fullenrich'],
+    this.activeTab() === 'ai'
+      ? ['openai']
+      : ['contactout', 'fullenrich', 'peopledatalabs'],
   );
 
   readonly visibleItems = computed(() => {
