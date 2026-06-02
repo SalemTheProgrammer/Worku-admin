@@ -11,6 +11,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, PaginationComponent],
   templateUrl: './candidates-list.component.html',
+  styleUrl: './candidates-list.component.css',
 })
 export class CandidatesListComponent implements OnInit {
   private readonly api = inject(AdminApiService);

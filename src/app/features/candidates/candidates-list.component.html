@@ -1,97 +1,129 @@
-<div class="page">
-  <header class="page-hero">
-    <div>
-      <p class="eyebrow">Administration</p>
-      <h1>Candidats</h1>
-      <p class="subtitle">{{ total() }} profil(s) — retournés par les recherches.</p>
+<div class="cand-shell">
+
+  <!-- Left: filter sidebar -->
+  <aside class="cand-sidebar">
+    <div class="sidebar-section-label">Filtres</div>
+
+    <div class="filter-group">
+      <label class="filter-label">Recherche</label>
+      <input
+        class="filter-input"
+        type="search"
+        [ngModel]="search()"
+        (ngModelChange)="applySearch($event)"
+        placeholder="Nom, titre, entreprise…"
+      />
     </div>
-  </header>
 
-  @if (sessionId()) {
-    <div class="alert alert-info">Filtré par session {{ sessionId() }} <button class="btn-ghost" (click)="applyFilter('sessionId', '')">✕</button></div>
-  }
-
-  @if (deleteMsg(); as msg) {
-    <div class="alert" [class.alert-success]="msg.startsWith('✓')" [class.alert-error]="msg.startsWith('✗')">{{ msg }}</div>
-  }
-
-  <!-- Filters -->
-  <div class="filter-bar">
-    <label class="search-field">
-      <span aria-hidden="true">⌕</span>
-      <input type="search" [ngModel]="search()" (ngModelChange)="applySearch($event)" placeholder="Nom, titre, entreprise…" />
-    </label>
-
-    <select class="select-field" [ngModel]="filterProvider()" (ngModelChange)="applyFilter('providerId', $event)">
-      <option value="">Tous les providers</option>
-      @for (p of PROVIDERS; track p) { <option [value]="p">{{ p }}</option> }
-    </select>
-
-    <label class="date-field">
-      <span>Depuis</span>
-      <input type="date" [ngModel]="filterFrom()" (ngModelChange)="applyFilter('from', $event)" />
-    </label>
-    <label class="date-field">
-      <span>Jusqu'au</span>
-      <input type="date" [ngModel]="filterTo()" (ngModelChange)="applyFilter('to', $event)" />
-    </label>
-
-    <button class="btn-ghost" (click)="clearFilters()">✕ Réinitialiser</button>
-  </div>
-
-  <!-- Bulk actions -->
-  @if (selected().size > 0) {
-    <div class="bulk-bar">
-      <span>{{ selected().size }} sélectionné(s)</span>
-      <button class="btn-danger-sm" (click)="bulkDelete()">🗑 Supprimer la sélection</button>
+    <div class="filter-group">
+      <label class="filter-label">Provider</label>
+      <select class="filter-input" [ngModel]="filterProvider()" (ngModelChange)="applyFilter('providerId', $event)">
+        <option value="">Tous</option>
+        @for (p of PROVIDERS; track p) {
+          <option [value]="p">{{ p }}</option>
+        }
+      </select>
     </div>
-  }
 
-  <section class="card">
-    @if (loading()) {
-      <p class="muted">Chargement…</p>
-    } @else if (items().length === 0) {
-      <p class="muted">Aucun candidat trouvé.</p>
-    } @else {
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th class="th-check">
-              <input type="checkbox" [checked]="allSelected" (change)="toggleAll()" />
-            </th>
-            <th>Candidat</th>
-            <th>Entreprise</th>
-            <th>Provider</th>
-            <th>Contact</th>
-            <th>Date</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (c of items(); track c.id) {
-            <tr [class.row-selected]="isSelected(c.id)">
-              <td class="th-check">
-                <input type="checkbox" [checked]="isSelected(c.id)" (change)="toggleSelect(c.id)" />
-              </td>
-              <td>
-                <strong>{{ c.fullName }}</strong>
-                <div class="cell-sub">{{ c.headline ?? c.currentTitle }}</div>
-              </td>
-              <td>{{ c.companyName ?? '—' }}</td>
-              <td><span class="badge badge-muted">{{ c.providerId }}</span></td>
-              <td>
-                @if (c.hasEmail) { <span class="badge badge-good">Email</span> }
-                @if (c.hasPhone) { <span class="badge badge-good">Tel</span> }
-              </td>
-              <td>{{ c.createdAt | date: 'dd/MM/yyyy' }}</td>
-              <td>
-                <button class="ia-btn ia-danger" (click)="deleteOne(c.id, c.fullName)" title="Supprimer">🗑</button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-      <app-pagination [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="onPageChange($event)" />
+    <div class="filter-group">
+      <label class="filter-label">Depuis</label>
+      <input class="filter-input" type="date" [ngModel]="filterFrom()" (ngModelChange)="applyFilter('from', $event)" />
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Jusqu'au</label>
+      <input class="filter-input" type="date" [ngModel]="filterTo()" (ngModelChange)="applyFilter('to', $event)" />
+    </div>
+
+    <button class="clear-filters-btn" (click)="clearFilters()">Réinitialiser les filtres</button>
+  </aside>
+
+  <!-- Right: main content -->
+  <main class="cand-main">
+
+    <div class="cand-page-header">
+      <div>
+        <p class="eyebrow">Administration</p>
+        <h1 class="cand-title">Candidats</h1>
+        <p class="cand-subtitle">{{ total() }} profil(s) retournés par les recherches</p>
+      </div>
+    </div>
+
+    @if (sessionId()) {
+      <div class="alert alert-info">
+        Filtré par session {{ sessionId() }}
+        <button class="inline-dismiss" (click)="applyFilter('sessionId', '')">Effacer</button>
+      </div>
     }
-  </section>
+
+    @if (deleteMsg(); as msg) {
+      <div class="alert" [class.alert-success]="msg.startsWith('✓')" [class.alert-error]="msg.startsWith('✗')">{{ msg }}</div>
+    }
+
+    @if (selected().size > 0) {
+      <div class="bulk-bar">
+        <span>{{ selected().size }} sélectionné(s)</span>
+        <button class="bulk-delete-btn" (click)="bulkDelete()">Supprimer la sélection</button>
+      </div>
+    }
+
+    <div class="cand-card">
+      @if (loading()) {
+        <div class="cand-state">Chargement…</div>
+      } @else if (items().length === 0) {
+        <div class="cand-state">Aucun candidat correspondant aux filtres.</div>
+      } @else {
+        <table class="cand-table">
+          <thead>
+            <tr>
+              <th class="col-check">
+                <input type="checkbox" [checked]="allSelected" (change)="toggleAll()" />
+              </th>
+              <th>Candidat</th>
+              <th>Entreprise</th>
+              <th>Source</th>
+              <th>Données disponibles</th>
+              <th>Indexé le</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of items(); track c.id) {
+              <tr [class.row-selected]="isSelected(c.id)">
+                <td class="col-check">
+                  <input type="checkbox" [checked]="isSelected(c.id)" (change)="toggleSelect(c.id)" />
+                </td>
+                <td>
+                  <div class="cand-name">{{ c.fullName }}</div>
+                  <div class="cand-sub">{{ c.headline ?? c.currentTitle ?? '—' }}</div>
+                </td>
+                <td class="cand-company">{{ c.companyName ?? '—' }}</td>
+                <td>
+                  <span class="provider-pill">{{ c.providerId }}</span>
+                </td>
+                <td>
+                  <div class="data-flags">
+                    <span class="data-flag" [class.flag-available]="c.hasEmail" [class.flag-missing]="!c.hasEmail">
+                      Email{{ c.hasEmail ? '' : ' —' }}
+                    </span>
+                    <span class="data-flag" [class.flag-available]="c.hasPhone" [class.flag-missing]="!c.hasPhone">
+                      Tél{{ c.hasPhone ? '' : ' —' }}
+                    </span>
+                  </div>
+                </td>
+                <td class="cand-date">{{ c.createdAt | date: 'dd MMM yyyy' }}</td>
+                <td>
+                  <button class="delete-link" (click)="deleteOne(c.id, c.fullName)">Supprimer</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="cand-pagination">
+          <app-pagination [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="onPageChange($event)" />
+        </div>
+      }
+    </div>
+
+  </main>
 </div>
