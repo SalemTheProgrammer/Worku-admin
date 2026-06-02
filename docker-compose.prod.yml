@@ -1,0 +1,23 @@
+services:
+  worku-admin:
+    image: worku-admin:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: worku-admin
+    restart: unless-stopped
+    networks:
+      - worku-network
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  worku-network:
+    name: worku-network
+    external: true
