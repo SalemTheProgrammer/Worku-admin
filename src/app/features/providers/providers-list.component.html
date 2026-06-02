@@ -5,59 +5,102 @@
       <h1>Clés API &amp; Routage</h1>
       <p class="subtitle">Gérer les providers, synchroniser les crédits, contrôler les priorités de routage.</p>
     </div>
-    <button type="button" class="btn-primary" *ngIf="activeTab() !== 'routing'" (click)="openAddForm()">+ Ajouter une clé</button>
+    <button type="button" class="btn-primary" *ngIf="activeTab() !== 'routing' && activeTab() !== 'logs'" (click)="openAddForm()">
+      Ajouter une clé
+    </button>
   </header>
 
   <!-- Tabs -->
   <div class="tab-row" role="tablist">
     <button type="button" class="tab-btn" [class.active]="activeTab() === 'providers'" (click)="selectTab('providers')">
-      🔑 Clés API Search
-    </button>
-    <button type="button" class="tab-btn" [class.active]="activeTab() === 'routing'" (click)="selectTab('routing')">
-      🔀 Priorités de routage
+      Clés Search
     </button>
     <button type="button" class="tab-btn" [class.active]="activeTab() === 'ai'" (click)="selectTab('ai')">
-      🤖 Clés AI
+      Clés AI
+    </button>
+    <button type="button" class="tab-btn" [class.active]="activeTab() === 'routing'" (click)="selectTab('routing')">
+      Routage
     </button>
     <button type="button" class="tab-btn" [class.active]="activeTab() === 'logs'" (click)="selectTab('logs')">
-      📋 Logs d'appels
+      Logs d'appels
     </button>
   </div>
 
   <!-- ═══════════════════════════════════════════
        TAB: API Keys (providers / ai)
   ═══════════════════════════════════════════ -->
-  <ng-container *ngIf="activeTab() !== 'routing'">
+  <ng-container *ngIf="activeTab() !== 'routing' && activeTab() !== 'logs'">
 
     <!-- Provider summary cards -->
     <div class="provider-cards" *ngIf="!loading()">
       <div class="provider-card" *ngFor="let card of providerCards()">
-        <div class="provider-card-header">
-          <span class="provider-badge">{{ card.label }}</span>
-          <a [href]="card.docsUrl" target="_blank" class="docs-link">Docs ↗</a>
+        <div class="pcard-head">
+          <span class="pcard-name">{{ card.label }}</span>
+          <a [href]="card.docsUrl" target="_blank" class="pcard-docs">Documentation</a>
         </div>
-        <div class="card-stats">
-          <div class="stat"><span class="stat-label">Clés</span><span class="stat-value">{{ card.totalKeys }}</span></div>
-          <div class="stat ok"><span class="stat-label">Actives</span><span class="stat-value">{{ card.activeKeys }}</span></div>
-          <div class="stat" [class.warn]="card.failingKeys > 0"><span class="stat-label">En échec</span><span class="stat-value">{{ card.failingKeys }}</span></div>
+
+        <div class="pcard-stats">
+          <div class="pstat">
+            <span class="pstat-label">Clés</span>
+            <span class="pstat-value">{{ card.totalKeys }}</span>
+          </div>
+          <div class="pstat">
+            <span class="pstat-label">Actives</span>
+            <span class="pstat-value pstat-ok">{{ card.activeKeys }}</span>
+          </div>
+          <div class="pstat">
+            <span class="pstat-label">Echecs</span>
+            <span class="pstat-value" [class.pstat-warn]="card.failingKeys > 0">{{ card.failingKeys }}</span>
+          </div>
         </div>
-        <!-- Sync all keys for this provider -->
-        <div class="card-sync-row">
+
+        <div class="pcard-credits">
+          <div class="credit-line">
+            <span class="credit-label">Crédits search</span>
+            <span class="credit-amount">{{ formatCredits(card.searchCreditsRemaining) }}</span>
+          </div>
+          <div class="credit-line">
+            <span class="credit-label">Crédits collecte</span>
+            <span class="credit-amount">{{ formatCredits(card.collectCreditsRemaining) }}</span>
+          </div>
+        </div>
+
+        <div class="pcard-sync-row">
           <ng-container *ngFor="let item of visibleItems()">
-            <ng-container *ngIf="item.providerId === card.providerId">
-              <button class="btn-sync-card" (click)="syncCredits(item.id)" [disabled]="isSyncing(item.id)" [title]="item.name">
-                {{ isSyncing(item.id) ? '⟳' : '↻' }} {{ item.name }}
-              </button>
-            </ng-container>
+            <button
+              *ngIf="item.providerId === card.providerId"
+              class="btn-sync-card"
+              (click)="syncCredits(item.id)"
+              [disabled]="isSyncing(item.id)"
+            >
+              {{ isSyncing(item.id) ? 'Synchronisation…' : 'Synchroniser — ' + item.name }}
+            </button>
           </ng-container>
         </div>
-        <!-- Last sync result for this provider -->
-        <div class="card-sync-result" *ngIf="syncResult() && syncResult()?.extra">
-          <span class="cb-chip">🔍 {{ syncResult()?.extra?.['search_remaining'] }}</span>
-          <span class="cb-chip">📧 {{ syncResult()?.extra?.['email_remaining'] }}</span>
-          <span class="cb-chip">📞 {{ syncResult()?.extra?.['phone_remaining'] }}</span>
+      </div>
+    </div>
+
+    <!-- Sync result panel -->
+    <div class="sync-result-panel" *ngIf="syncResult()">
+      <div class="srp-header">
+        <strong>Réponse — clé {{ syncResult()?.id | slice:0:8 }}…</strong>
+        <button class="srp-close" (click)="syncResult.set(null)">Fermer</button>
+      </div>
+      <div class="srp-credits" *ngIf="syncResult()?.extra">
+        <div class="srp-credit-row">
+          <span>Search</span>
+          <strong>{{ syncResult()?.extra?.['search_remaining'] }}</strong>
+        </div>
+        <div class="srp-credit-row">
+          <span>Email</span>
+          <strong>{{ syncResult()?.extra?.['email_remaining'] }}</strong>
+        </div>
+        <div class="srp-credit-row">
+          <span>Téléphone</span>
+          <strong>{{ syncResult()?.extra?.['phone_remaining'] }}</strong>
         </div>
       </div>
+      <pre class="raw-json">{{ rawJson(syncResult()?.raw) }}</pre>
     </div>
 
     <!-- Add-key form -->
@@ -70,15 +113,15 @@
         </select>
       </div>
       <div class="form-row">
-        <label>Nom (ex: ContactOut Key 2)</label>
-        <input type="text" [(ngModel)]="form.name" placeholder="Nom lisible" />
+        <label>Nom</label>
+        <input type="text" [(ngModel)]="form.name" placeholder="Ex: ContactOut Key 2" />
       </div>
       <div class="form-row">
         <label>Clé API</label>
-        <input type="password" [(ngModel)]="form.apiKey" placeholder="sk-..." autocomplete="new-password" />
+        <input type="password" [(ngModel)]="form.apiKey" placeholder="sk-…" autocomplete="new-password" />
       </div>
       <div class="form-row">
-        <label>Priorité (1 = prioritaire)</label>
+        <label>Priorité</label>
         <input type="number" [(ngModel)]="form.priority" min="1" max="999" />
       </div>
       <div class="form-row">
@@ -87,73 +130,83 @@
       </div>
       <div class="form-actions">
         <button type="button" class="btn-primary" (click)="create()">Enregistrer</button>
-        <button type="button" class="btn-ghost" (click)="showForm.set(false)">Annuler</button>
+        <button type="button" class="btn-secondary" (click)="showForm.set(false)">Annuler</button>
       </div>
       <p class="form-error" *ngIf="testResult()">{{ testResult() }}</p>
     </div>
 
     <!-- Keys table -->
     <div class="table-wrap" *ngIf="!loading(); else loadingTpl">
-      <table class="data-table" *ngIf="visibleItems().length; else emptyTpl">
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Provider</th>
-            <th>Priorité</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of visibleItems()" [class.row-failing]="isFailingKey(item)" [class.row-inactive]="!item.isActive">
-            <td>
-              <span class="key-name">{{ item.name }}</span>
-              <span class="key-hint">····{{ item.apiKeyHint }}</span>
-              <span class="badge-encrypted" *ngIf="item.encrypted" title="Chiffré AES-256">🔒</span>
-            </td>
-            <td><span class="pill">{{ PROVIDER_LABELS[item.providerId] ?? item.providerId }}</span></td>
-            <td>
-              <div class="priority-ctrl">
-                <button class="icon-btn" (click)="bumpPriority(item, -1)" title="Monter">▲</button>
-                <span>{{ item.priority }}</span>
-                <button class="icon-btn" (click)="bumpPriority(item, 1)" title="Descendre">▼</button>
-              </div>
-            </td>
-            <td>
-              <button class="status-toggle" [class.active]="item.isActive" (click)="toggleActive(item)">
-                {{ item.isActive ? 'Active' : 'Inactive' }}
-              </button>
-            </td>
-            <td>
-              <div class="row-actions">
-                <button class="ia-btn" (click)="test(item.id)" [disabled]="isTesting(item.id)" title="Tester connexion">{{ isTesting(item.id) ? '…' : '⚡ Test' }}</button>
-                <button class="ia-btn ia-sync" (click)="syncCredits(item.id)" [disabled]="isSyncing(item.id)" title="Sync crédits">{{ isSyncing(item.id) ? '⟳' : '↻ Sync' }}</button>
-                <button class="ia-btn ia-warn" *ngIf="isFailingKey(item)" (click)="resetFailures(item.id)" [disabled]="isResetting(item.id)" title="Reset échecs">{{ isResetting(item.id) ? '…' : '↺ Reset' }}</button>
-                <button class="ia-btn ia-danger" (click)="deactivate(item.id)" title="Désactiver">✕</button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="card">
+        <table class="data-table" *ngIf="visibleItems().length; else emptyTpl">
+          <thead>
+            <tr>
+              <th>Nom / Clé</th>
+              <th>Provider</th>
+              <th>Priorité</th>
+              <th>Crédits search</th>
+              <th>Crédits collecte</th>
+              <th>Echecs</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of visibleItems()" [class.row-failing]="isFailingKey(item)" [class.row-inactive]="!item.isActive">
+              <td>
+                <span class="key-name">{{ item.name }}</span>
+                <span class="key-hint">{{ item.apiKeyHint }}</span>
+                <span class="key-enc" *ngIf="item.encrypted">Chiffré</span>
+              </td>
+              <td>
+                <span class="pill">{{ PROVIDER_LABELS[item.providerId] ?? item.providerId }}</span>
+              </td>
+              <td>
+                <div class="priority-ctrl">
+                  <button class="prio-btn" (click)="bumpPriority(item, -1)">Haut</button>
+                  <span class="prio-val">{{ item.priority }}</span>
+                  <button class="prio-btn" (click)="bumpPriority(item, 1)">Bas</button>
+                </div>
+              </td>
+              <td>
+                <span class="credit-num credit-search">{{ formatCredits(item.searchCreditsRemaining ?? 0) }}</span>
+              </td>
+              <td>
+                <span class="credit-num credit-collect">{{ formatCredits(item.collectCreditsRemaining ?? 0) }}</span>
+              </td>
+              <td>
+                <span class="fail-badge" [class.fail-badge-warn]="isFailingKey(item)">
+                  {{ item.failureCount }} / {{ item.maxFailuresBeforeSkip }}
+                </span>
+              </td>
+              <td>
+                <button class="status-toggle" [class.active]="item.isActive" (click)="toggleActive(item)">
+                  {{ item.isActive ? 'Active' : 'Inactive' }}
+                </button>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="ia-btn" (click)="test(item.id)" [disabled]="isTesting(item.id)">
+                    {{ isTesting(item.id) ? 'Test…' : 'Tester' }}
+                  </button>
+                  <button class="ia-btn ia-sync" (click)="syncCredits(item.id)" [disabled]="isSyncing(item.id)">
+                    {{ isSyncing(item.id) ? 'Sync…' : 'Sync crédits' }}
+                  </button>
+                  <button class="ia-btn ia-warn" *ngIf="isFailingKey(item)" (click)="resetFailures(item.id)" [disabled]="isResetting(item.id)">
+                    {{ isResetting(item.id) ? '…' : 'Réinitialiser' }}
+                  </button>
+                  <button class="ia-btn ia-danger" (click)="deactivate(item.id)">Supprimer</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-      <!-- Global feedback -->
-      <div class="feedback-row" *ngIf="testResult()">
-        <span [class.feedback-ok]="testResult()?.startsWith('✓')" [class.feedback-err]="testResult()?.startsWith('✗')">{{ testResult() }}</span>
-      </div>
-
-      <!-- Raw sync response -->
-      <div class="sync-raw" *ngIf="syncResult()">
-        <div class="sync-raw-header">
-          <strong>Réponse brute du provider — clé {{ syncResult()?.id | slice:0:8 }}…</strong>
-          <button class="btn-ghost" (click)="syncResult.set(null)">✕ Fermer</button>
+        <div class="feedback-row" *ngIf="testResult()">
+          <span [class.feedback-ok]="testResult()?.startsWith('✓')" [class.feedback-err]="testResult()?.startsWith('✗')">
+            {{ testResult() }}
+          </span>
         </div>
-        <!-- ContactOut shows 3 credit lines -->
-        <div class="credit-breakdown" *ngIf="syncResult()?.extra">
-          <div class="cb-row"><span>🔍 Search</span><strong>{{ syncResult()?.extra?.['search_remaining'] }}</strong></div>
-          <div class="cb-row"><span>📧 Email</span><strong>{{ syncResult()?.extra?.['email_remaining'] }}</strong></div>
-          <div class="cb-row"><span>📞 Téléphone</span><strong>{{ syncResult()?.extra?.['phone_remaining'] }}</strong></div>
-        </div>
-        <pre class="raw-json">{{ rawJson(syncResult()?.raw) }}</pre>
       </div>
     </div>
   </ng-container>
@@ -165,20 +218,19 @@
     <div class="routing-panel">
       <p class="routing-intro">
         Définissez l'ordre de priorité des providers pour chaque type d'opération.
-        Le premier provider de la liste est appelé en priorité; en cas d'échec les suivants sont essayés.
-        Ces réglages sont stockés en base de données et actifs immédiatement, sans redémarrage.
+        Le premier provider est appelé en priorité ; en cas d'échec les suivants sont essayés.
+        Ces réglages sont actifs immédiatement, sans redémarrage.
       </p>
 
-      <!-- Search order -->
       <div class="routing-section">
-        <h3>🔍 Recherche de candidats (search)</h3>
+        <h3>Recherche de candidats</h3>
         <div class="order-list">
           <div class="order-item" *ngFor="let p of draftOrder('searchOrder'); let i = index">
             <span class="order-rank">{{ i + 1 }}</span>
             <span class="order-label">{{ PROVIDER_LABELS[p] ?? p }}</span>
             <div class="order-actions">
-              <button class="icon-btn" (click)="moveProvider('searchOrder', p, -1)" [disabled]="i === 0">▲</button>
-              <button class="icon-btn" (click)="moveProvider('searchOrder', p, 1)" [disabled]="i === draftOrder('searchOrder').length - 1">▼</button>
+              <button class="icon-btn" (click)="moveProvider('searchOrder', p, -1)" [disabled]="i === 0">Monter</button>
+              <button class="icon-btn" (click)="moveProvider('searchOrder', p, 1)" [disabled]="i === draftOrder('searchOrder').length - 1">Descendre</button>
             </div>
           </div>
         </div>
@@ -188,46 +240,43 @@
         </label>
       </div>
 
-      <!-- Email enrichment order -->
       <div class="routing-section">
-        <h3>📧 Enrichissement email (reveal email)</h3>
+        <h3>Enrichissement email</h3>
         <div class="order-list">
           <div class="order-item" *ngFor="let p of draftOrder('enrichOrder'); let i = index">
             <span class="order-rank">{{ i + 1 }}</span>
             <span class="order-label">{{ PROVIDER_LABELS[p] ?? p }}</span>
             <div class="order-actions">
-              <button class="icon-btn" (click)="moveProvider('enrichOrder', p, -1)" [disabled]="i === 0">▲</button>
-              <button class="icon-btn" (click)="moveProvider('enrichOrder', p, 1)" [disabled]="i === draftOrder('enrichOrder').length - 1">▼</button>
+              <button class="icon-btn" (click)="moveProvider('enrichOrder', p, -1)" [disabled]="i === 0">Monter</button>
+              <button class="icon-btn" (click)="moveProvider('enrichOrder', p, 1)" [disabled]="i === draftOrder('enrichOrder').length - 1">Descendre</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Phone enrichment order -->
       <div class="routing-section">
-        <h3>📞 Enrichissement téléphone (reveal phone)</h3>
+        <h3>Enrichissement téléphone</h3>
         <div class="order-list">
           <div class="order-item" *ngFor="let p of draftOrder('phoneOrder'); let i = index">
             <span class="order-rank">{{ i + 1 }}</span>
             <span class="order-label">{{ PROVIDER_LABELS[p] ?? p }}</span>
             <div class="order-actions">
-              <button class="icon-btn" (click)="moveProvider('phoneOrder', p, -1)" [disabled]="i === 0">▲</button>
-              <button class="icon-btn" (click)="moveProvider('phoneOrder', p, 1)" [disabled]="i === draftOrder('phoneOrder').length - 1">▼</button>
+              <button class="icon-btn" (click)="moveProvider('phoneOrder', p, -1)" [disabled]="i === 0">Monter</button>
+              <button class="icon-btn" (click)="moveProvider('phoneOrder', p, 1)" [disabled]="i === draftOrder('phoneOrder').length - 1">Descendre</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Developer data order -->
       <div class="routing-section">
-        <h3>💻 Données développeur</h3>
+        <h3>Données développeur</h3>
         <div class="order-list">
           <div class="order-item" *ngFor="let p of draftOrder('developerDataOrder'); let i = index">
             <span class="order-rank">{{ i + 1 }}</span>
             <span class="order-label">{{ PROVIDER_LABELS[p] ?? p }}</span>
             <div class="order-actions">
-              <button class="icon-btn" (click)="moveProvider('developerDataOrder', p, -1)" [disabled]="i === 0">▲</button>
-              <button class="icon-btn" (click)="moveProvider('developerDataOrder', p, 1)" [disabled]="i === draftOrder('developerDataOrder').length - 1">▼</button>
+              <button class="icon-btn" (click)="moveProvider('developerDataOrder', p, -1)" [disabled]="i === 0">Monter</button>
+              <button class="icon-btn" (click)="moveProvider('developerDataOrder', p, 1)" [disabled]="i === draftOrder('developerDataOrder').length - 1">Descendre</button>
             </div>
           </div>
         </div>
@@ -235,14 +284,15 @@
 
       <div class="routing-footer">
         <button type="button" class="btn-primary" (click)="saveRouting()" [disabled]="routingLoading()">
-          {{ routingLoading() ? 'Sauvegarde…' : 'Sauvegarder la configuration' }}
+          {{ routingLoading() ? 'Sauvegarde…' : 'Sauvegarder' }}
         </button>
-        <span class="routing-msg" *ngIf="routingSaveMsg()" [class.ok]="routingSaveMsg()?.startsWith('✓')">{{ routingSaveMsg() }}</span>
+        <span class="routing-msg" *ngIf="routingSaveMsg()" [class.ok]="routingSaveMsg()?.startsWith('✓')">
+          {{ routingSaveMsg() }}
+        </span>
       </div>
 
-      <!-- Current effective config (from DB) -->
       <div class="current-routing" *ngIf="routing()">
-        <p class="current-label">Configuration active en base de données :</p>
+        <p class="current-label">Configuration active en base de données</p>
         <pre class="raw-json">{{ rawJson(routing()) }}</pre>
       </div>
     </div>
@@ -256,19 +306,20 @@
       <div class="logs-toolbar">
         <div class="logs-filters">
           <button class="log-filter-btn" [class.active]="logsFilter() === 'all'" (click)="setLogsFilter('all')">Tous</button>
-          <button class="log-filter-btn ok" [class.active]="logsFilter() === 'ok'" (click)="setLogsFilter('ok')">✓ Succès</button>
-          <button class="log-filter-btn err" [class.active]="logsFilter() === 'err'" (click)="setLogsFilter('err')">✗ Échecs</button>
+          <button class="log-filter-btn ok" [class.active]="logsFilter() === 'ok'" (click)="setLogsFilter('ok')">Succès</button>
+          <button class="log-filter-btn err" [class.active]="logsFilter() === 'err'" (click)="setLogsFilter('err')">Echecs</button>
         </div>
         <div class="logs-actions">
           <span class="logs-total">{{ logsTotal() }} appels</span>
-          <button class="btn-ghost" (click)="loadLogs()" title="Rafraîchir">⟳ Refresh</button>
-          <button class="btn-danger-sm" (click)="clearLogs()">🗑 Vider les logs</button>
-          <button class="btn-ghost" (click)="cleanupCoresignal()" title="Supprimer les entrées CoreSignal obsolètes">🧹 Cleanup CoreSignal DB</button>
+          <button class="btn-secondary btn-sm" (click)="loadLogs()">Actualiser</button>
+          <button class="btn-danger-sm" (click)="clearLogs()">Vider les logs</button>
+          <button class="btn-secondary btn-sm" (click)="cleanupCoresignal()">Nettoyer CoreSignal</button>
         </div>
       </div>
+
       <span class="cleanup-msg" *ngIf="cleanupMsg()">{{ cleanupMsg() }}</span>
 
-      <div class="table-wrap">
+      <div class="card">
         <div class="loading-row" *ngIf="logsLoading()">Chargement…</div>
         <table class="data-table" *ngIf="!logsLoading() && logs().length">
           <thead>
@@ -278,8 +329,8 @@
               <th>Statut</th>
               <th>HTTP</th>
               <th>Durée</th>
-              <th>Résumé réponse</th>
-              <th>Horodatage</th>
+              <th>Résumé</th>
+              <th>Date</th>
             </tr>
           </thead>
           <tbody>
@@ -291,7 +342,7 @@
               <td class="log-endpoint" [title]="log.endpoint">{{ logEndpointShort(log.endpoint) }}</td>
               <td>
                 <span class="log-status-pill" [class.ok]="log.success" [class.err]="!log.success">
-                  {{ log.success ? '✓' : '✗' }}
+                  {{ log.success ? 'OK' : 'Err' }}
                 </span>
                 <span class="log-err-msg" *ngIf="!log.success && log.errorMessage" [title]="log.errorMessage">
                   {{ log.errorMessage | slice:0:40 }}…
@@ -313,23 +364,22 @@
         </div>
       </div>
 
-      <!-- Pagination -->
       <div class="logs-pagination" *ngIf="logsTotal() > LOGS_LIMIT">
-        <button class="icon-btn" (click)="logsPrevPage()" [disabled]="logsPage() === 0">◀</button>
+        <button class="btn-secondary btn-sm" (click)="logsPrevPage()" [disabled]="logsPage() === 0">Précédent</button>
         <span>Page {{ logsPage() + 1 }} / {{ Math.ceil(logsTotal() / LOGS_LIMIT) }}</span>
-        <button class="icon-btn" (click)="logsNextPage()" [disabled]="(logsPage() + 1) * LOGS_LIMIT >= logsTotal()">▶</button>
+        <button class="btn-secondary btn-sm" (click)="logsNextPage()" [disabled]="(logsPage() + 1) * LOGS_LIMIT >= logsTotal()">Suivant</button>
       </div>
     </div>
   </ng-container>
 
-  <!-- Loaders / empties -->
   <ng-template #loadingTpl>
     <div class="loading-row">Chargement…</div>
   </ng-template>
+
   <ng-template #emptyTpl>
     <div class="empty-state">
       <p>Aucune clé configurée pour ces providers.</p>
-      <button type="button" class="btn-primary" (click)="openAddForm()">+ Ajouter une clé</button>
+      <button type="button" class="btn-primary" (click)="openAddForm()">Ajouter une clé</button>
     </div>
   </ng-template>
 </div>
