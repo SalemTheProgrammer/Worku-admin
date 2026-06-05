@@ -70,6 +70,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'payments',
+        loadComponent: () =>
+          import('./features/payments/payments-list.component').then((m) => m.PaymentsListComponent),
+      },
+      {
         path: 'audit',
         loadComponent: () =>
           import('./features/audit/audit-list.component').then((m) => m.AuditListComponent),

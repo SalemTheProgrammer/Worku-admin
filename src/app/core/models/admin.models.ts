@@ -207,6 +207,31 @@ export interface ProviderCallLogItem {
   createdAt: string;
 }
 
+export interface PurchaseItem {
+  id: string;
+  companyId: string;
+  packId: string;
+  packName: string;
+  credits: number;
+  amountTnd: number;
+  currency: string;
+  paymentMethod: string;
+  status: 'pending' | 'completed' | 'failed' | 'expired';
+  invoiceNumber: string | null;
+  billingEmail: string | null;
+  flouciPaymentId: string | null;
+  completedAt: string | null;
+  failedAt: string | null;
+  createdAt: string;
+}
+
+export interface PaymentSummary {
+  revenueCompletedTnd: number;
+  completedCount: number;
+  pendingCount: number;
+  failedCount: number;
+}
+
 export interface ChangePlanResult {
   id: string;
   plan: string;

@@ -1,0 +1,81 @@
+<div class="page">
+  <header class="page-hero">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Paiements</h1>
+      <p class="subtitle">Historique des achats de crédits via Flouci.</p>
+    </div>
+  </header>
+
+  <!-- Summary KPIs -->
+  @if (summary(); as s) {
+    <section class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card stat-card--green">
+        <span class="stat-label">Revenus (TND)</span>
+        <span class="stat-value">{{ s.revenueCompletedTnd | number:'1.0-0' }}</span>
+        <span class="stat-sub">{{ s.completedCount }} paiement(s) complété(s)</span>
+      </div>
+      <div class="stat-card stat-card--warn">
+        <span class="stat-label">En attente</span>
+        <span class="stat-value">{{ s.pendingCount }}</span>
+        <span class="stat-sub">Paiements initiés</span>
+      </div>
+      <div class="stat-card stat-card--danger">
+        <span class="stat-label">Échoués</span>
+        <span class="stat-value">{{ s.failedCount }}</span>
+        <span class="stat-sub">Paiements refusés</span>
+      </div>
+    </section>
+  }
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <select class="select-field" [ngModel]="filterStatus()" (ngModelChange)="applyFilter($event)">
+      <option value="">Tous les statuts</option>
+      <option value="completed">Payé</option>
+      <option value="pending">En attente</option>
+      <option value="failed">Échoué</option>
+      <option value="expired">Expiré</option>
+    </select>
+  </div>
+
+  <section class="card">
+    @if (loading()) {
+      <p class="muted">Chargement…</p>
+    } @else if (items().length === 0) {
+      <p class="muted">Aucun paiement.</p>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Entreprise</th>
+            <th>Pack</th>
+            <th>Crédits</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th>Facture</th>
+            <th>ID Flouci</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of items(); track p.id) {
+            <tr>
+              <td class="cell-sub">{{ p.createdAt | date:'dd/MM/yy HH:mm' }}</td>
+              <td>
+                <a [routerLink]="['/companies', p.companyId]" class="link-action">{{ p.billingEmail ?? p.companyId }}</a>
+              </td>
+              <td>{{ p.packName }}</td>
+              <td>{{ p.credits }}</td>
+              <td><strong>{{ p.amountTnd }} TND</strong></td>
+              <td><span [class]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
+              <td>{{ p.invoiceNumber ?? '—' }}</td>
+              <td class="cell-sub mono">{{ p.flouciPaymentId ? (p.flouciPaymentId | slice:0:12) + '…' : '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <app-pagination [page]="page()" [totalPages]="totalPages()" [total]="total()" (pageChange)="onPageChange($event)" />
+    }
+  </section>
+</div>

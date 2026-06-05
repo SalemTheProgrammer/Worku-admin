@@ -13,9 +13,11 @@ import {
   CreditBalanceItem,
   CreditTransactionItem,
   Paginated,
+  PaymentSummary,
   ProviderConfigItem,
   ProviderCreditSync,
   ProviderStats,
+  PurchaseItem,
   RoutingConfig,
   SessionDetail,
   SessionFilters,
@@ -220,6 +222,15 @@ export class AdminApiService {
   }
 
   // Audit
+  // Payments
+  listPayments(params: Record<string, string | number | undefined>): Observable<Paginated<PurchaseItem>> {
+    return this.get<Paginated<PurchaseItem>>('/admin/payments', params);
+  }
+
+  getPaymentsSummary(): Observable<PaymentSummary> {
+    return this.get<PaymentSummary>('/admin/payments/summary');
+  }
+
   listAuditLogs(params: Record<string, string | number | undefined>): Observable<Paginated<AuditLogItem>> {
     return this.get<Paginated<AuditLogItem>>('/admin/audit-logs', params);
   }

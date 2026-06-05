@@ -8,47 +8,97 @@
   </header>
 
   @if (loading()) {
-    <div class="card loading-card">Chargement…</div>
+    <div class="card" style="padding:32px;text-align:center"><p class="muted">Chargement…</p></div>
   } @else {
+
+    <!-- ── KPI row 1: Entreprises & Activité ── -->
     <section class="stats-grid">
       <a routerLink="/companies" class="stat-card">
         <span class="stat-label">Entreprises</span>
         <span class="stat-value">{{ companiesTotal() }}</span>
+        <span class="stat-sub">Total inscrites</span>
       </a>
-      <a routerLink="/companies" [queryParams]="{ isBlocked: 'true' }" class="stat-card stat-danger">
+      <a routerLink="/companies" [queryParams]="{ isBlocked: 'true' }" class="stat-card stat-card--danger">
         <span class="stat-label">Bloquées</span>
         <span class="stat-value">{{ blockedCompanies() }}</span>
+        <span class="stat-sub">Comptes suspendus</span>
       </a>
       <a routerLink="/sessions" class="stat-card">
         <span class="stat-label">Recherches</span>
         <span class="stat-value">{{ sessionsTotal() }}</span>
+        <span class="stat-sub">Sessions au total</span>
       </a>
       <a routerLink="/credits" class="stat-card">
-        <span class="stat-label">Crédits (top 100)</span>
+        <span class="stat-label">Crédits en circulation</span>
         <span class="stat-value">{{ creditsTotal() }}</span>
+        <span class="stat-sub">Top 100 comptes</span>
       </a>
     </section>
 
+    <!-- ── KPI row 2: Paiements ── -->
+    @if (paymentSummary(); as ps) {
+      <section class="stats-grid" style="margin-bottom:28px">
+        <a routerLink="/payments" [queryParams]="{ status: 'completed' }" class="stat-card stat-card--green">
+          <span class="stat-label">Revenus (TND)</span>
+          <span class="stat-value">{{ ps.revenueCompletedTnd | number:'1.0-0' }}</span>
+          <span class="stat-sub">{{ ps.completedCount }} paiement(s)</span>
+        </a>
+        <a routerLink="/payments" [queryParams]="{ status: 'pending' }" class="stat-card stat-card--warn">
+          <span class="stat-label">En attente</span>
+          <span class="stat-value">{{ ps.pendingCount }}</span>
+          <span class="stat-sub">Paiements initiés</span>
+        </a>
+        <a routerLink="/payments" [queryParams]="{ status: 'failed' }" class="stat-card stat-card--danger">
+          <span class="stat-label">Échoués</span>
+          <span class="stat-value">{{ ps.failedCount }}</span>
+          <span class="stat-sub">Paiements refusés</span>
+        </a>
+      </section>
+    }
+
+    <!-- ── Bottom grid: System + Providers + Recent payments ── -->
     <section class="card-grid">
+
+      <!-- System info -->
       <div class="card">
         <h2>Système</h2>
         <dl class="meta-list">
-          <div><dt>Version prompt filtres</dt><dd>{{ promptVersion() || '—' }}</dd></div>
-          <div><dt>Ordre providers</dt><dd>{{ providerOrder().join(' → ') || '—' }}</dd></div>
+          <div>
+            <dt>Version prompt filtres</dt>
+            <dd>{{ promptVersion() || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Ordre providers</dt>
+            <dd>{{ providerOrder().join(' → ') || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Santé providers</dt>
+            <dd>
+              @if (providerHealth(providerStats()) === 'ok') {
+                <span class="badge badge-good">Opérationnel</span>
+              } @else if (providerHealth(providerStats()) === 'warn') {
+                <span class="badge badge-warn">Dégradé</span>
+              } @else {
+                <span class="badge badge-danger">Hors ligne</span>
+              }
+            </dd>
+          </div>
         </dl>
       </div>
 
+      <!-- Provider keys -->
       <div class="card">
-        <h2>Clés API par provider</h2>
+        <h2>Clés API</h2>
         @if (providerStats().length === 0) {
           <p class="muted">Aucune clé configurée.</p>
         } @else {
-          <table class="data-table compact">
+          <table class="data-table">
             <thead>
               <tr>
                 <th>Provider</th>
                 <th>Actives</th>
-                <th>En échec</th>
+                <th>Échecs</th>
+                <th>Statut</th>
               </tr>
             </thead>
             <tbody>
@@ -57,13 +107,53 @@
                   <td>{{ s.providerId }}</td>
                   <td>{{ s.activeKeys }}/{{ s.totalKeys }}</td>
                   <td>{{ s.failingKeys }}</td>
+                  <td>
+                    @if (s.failingKeys === 0 && s.activeKeys > 0) {
+                      <span class="badge badge-good">OK</span>
+                    } @else if (s.failingKeys > 0) {
+                      <span class="badge badge-warn">Alerte</span>
+                    } @else {
+                      <span class="badge badge-muted">—</span>
+                    }
+                  </td>
                 </tr>
               }
             </tbody>
           </table>
         }
-        <a routerLink="/providers" class="link-action">Gérer les clés →</a>
+        <a routerLink="/providers" class="link-action" style="margin-top:12px;display:inline-block">Gérer les clés →</a>
       </div>
+
+      <!-- Recent payments -->
+      <div class="card">
+        <h2>Paiements récents</h2>
+        @if (recentPayments().length === 0) {
+          <p class="muted">Aucun paiement complété.</p>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Pack</th>
+                <th>TND</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of recentPayments(); track p.id) {
+                <tr>
+                  <td class="cell-sub">{{ p.billingEmail ?? '—' }}</td>
+                  <td>{{ p.packName }}</td>
+                  <td><strong>{{ p.amountTnd }}</strong></td>
+                  <td class="cell-sub">{{ p.completedAt | date:'dd/MM/yy' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+        <a routerLink="/payments" class="link-action" style="margin-top:12px;display:inline-block">Voir tous les paiements →</a>
+      </div>
+
     </section>
   }
 </div>

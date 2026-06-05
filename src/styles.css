@@ -231,6 +231,39 @@ body {
   color: var(--fg-3);
 }
 
+.badge-warn {
+  background: rgba(234, 179, 8, 0.12);
+  color: #92400e;
+}
+
+/* ── Stat card colour variants ── */
+.stat-card--green {
+  border-left: 3px solid var(--good);
+}
+.stat-card--green .stat-value { color: var(--good); }
+
+.stat-card--warn {
+  border-left: 3px solid #f59e0b;
+}
+.stat-card--warn .stat-value { color: #92400e; }
+
+.stat-card--danger {
+  border-left: 3px solid var(--danger);
+}
+.stat-card--danger .stat-value { color: var(--danger); }
+
+.stat-sub {
+  font-size: 11px;
+  color: var(--fg-4);
+  margin-top: 2px;
+}
+
+/* ── mono utility ── */
+.mono {
+  font-family: 'Geist Mono', 'Fira Code', monospace;
+  font-size: 12px;
+}
+
 .meta-list {
   margin: 0;
 }
