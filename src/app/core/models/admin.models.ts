@@ -115,8 +115,8 @@ export interface ProviderConfigItem {
   capabilities: string;
   maxFailuresBeforeSkip: number;
   rateLimitPerMinute: number;
-  searchCreditsRemaining: number;
-  collectCreditsRemaining: number;
+  searchCreditsRemaining?: number | null;
+  collectCreditsRemaining?: number | null;
   failureCount: number;
   lastUsedAt: string | null;
   lastFailureAt: string | null;

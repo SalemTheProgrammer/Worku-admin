@@ -17,7 +17,7 @@ interface ProviderSummaryCard {
   collectCreditsRemaining: number;
 }
 
-const PROVIDER_LABELS: Record<string, string> = {
+const PROVIDER_LABELS: Record<string, string | undefined> = {
   contactout: 'ContactOut',
   fullenrich: 'FullEnrich',
   openai: 'OpenAI',
@@ -105,11 +105,11 @@ export class ProvidersListComponent implements OnInit {
           stats?.failingKeys ??
           keys.filter((k) => k.failureCount >= k.maxFailuresBeforeSkip).length,
         searchCreditsRemaining: keys.reduce(
-          (s, k) => s + (Number.isFinite(k.searchCreditsRemaining) ? k.searchCreditsRemaining : 0),
+          (s, k) => s + (Number.isFinite(k.searchCreditsRemaining) ? (k.searchCreditsRemaining ?? 0) : 0),
           0,
         ),
         collectCreditsRemaining: keys.reduce(
-          (s, k) => s + (Number.isFinite(k.collectCreditsRemaining) ? k.collectCreditsRemaining : 0),
+          (s, k) => s + (Number.isFinite(k.collectCreditsRemaining) ? (k.collectCreditsRemaining ?? 0) : 0),
           0,
         ),
       };
