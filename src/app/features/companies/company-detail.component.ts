@@ -38,7 +38,7 @@ export class CompanyDetailComponent implements OnInit {
     accountType: string;
     badge?: string;
   }[] = [
-    { value: 'discovery', label: 'Essai Gratuit',  credits: 50,   price: 'Gratuit',      seats: 1, accountType: 'freemium-beta' },
+    { value: 'discovery', label: 'Essai Gratuit',  credits: 30,   price: 'Gratuit',      seats: 1, accountType: 'freemium-beta' },
     { value: 'recruiter', label: 'Starter',         credits: 220,  price: '189 TND/mois', seats: 1, accountType: 'premium' },
     { value: 'agency',    label: 'Pro',             credits: 600,  price: '399 TND/mois', seats: 1, accountType: 'enterprise', badge: 'Recommandé' },
     { value: 'team',      label: 'Team',            credits: 1500, price: '899 TND/mois', seats: 3, accountType: 'enterprise' },
@@ -138,6 +138,7 @@ export class CompanyDetailComponent implements OnInit {
     const expiresAt = this.planExpiresAt || null;
     this.api.changeCompanyPlan(this.id, this.selectedPlan, expiresAt).subscribe({
       next: (result) => {
+        this.loadCredits(this.id);
         this.message.set(`Plan changé → ${result.plan} (${result.accountType})`);
         this.reload('Plan mis à jour.');
       },

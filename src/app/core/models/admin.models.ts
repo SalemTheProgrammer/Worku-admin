@@ -212,4 +212,6 @@ export interface ChangePlanResult {
   plan: string;
   accountType: string;
   expiresAt: string | null;
+  creditsGranted?: number;
+  creditsBalance?: number | null;
 }
