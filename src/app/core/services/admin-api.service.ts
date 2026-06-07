@@ -25,6 +25,32 @@ import {
   SessionPrompt,
 } from '../models/admin.models';
 
+export interface InviteListItem {
+  id: string;
+  email: string;
+  nomEntreprise: string;
+  firstName?: string;
+  lastName?: string;
+  emailChanged: boolean;
+  linkActive: boolean;
+  linkExpiresAt: string | null;
+  isBlocked: boolean;
+  lastLoginAt: string | null;
+  createdAt: string | null;
+}
+
+export interface CreateInviteResult {
+  company: {
+    id: string;
+    email: string;
+    nomEntreprise: string;
+    firstName?: string;
+    lastName?: string;
+  };
+  magicLink: string;
+  magicLinkExpiresAt: string;
+}
+
 type ApiEnvelope<T> =
   | T
   | {
@@ -233,6 +259,36 @@ export class AdminApiService {
 
   listAuditLogs(params: Record<string, string | number | undefined>): Observable<Paginated<AuditLogItem>> {
     return this.get<Paginated<AuditLogItem>>('/admin/audit-logs', params);
+  }
+
+  // Invitations (CEO magic-link onboarding)
+  createInvite(body: {
+    firstName: string;
+    lastName: string;
+    companyName?: string;
+  }): Observable<CreateInviteResult> {
+    return this.post<CreateInviteResult>('/admin/invites', body);
+  }
+
+  listInvites(): Observable<InviteListItem[]> {
+    return this.get<InviteListItem[]>('/admin/invites');
+  }
+
+  changeInviteEmail(id: string, email: string): Observable<unknown> {
+    return this.patch<unknown>(`/admin/invites/${id}/email`, { email });
+  }
+
+  regenerateInviteLink(
+    id: string,
+  ): Observable<{ magicLink: string; magicLinkExpiresAt: string }> {
+    return this.post<{ magicLink: string; magicLinkExpiresAt: string }>(
+      `/admin/invites/${id}/regenerate-link`,
+      {},
+    );
+  }
+
+  deleteInvite(id: string): Observable<{ deleted: boolean }> {
+    return this.delete<{ deleted: boolean }>(`/admin/invites/${id}`);
   }
 
   private get<T>(

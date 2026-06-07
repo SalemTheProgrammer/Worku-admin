@@ -79,6 +79,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/audit/audit-list.component').then((m) => m.AuditListComponent),
       },
+      {
+        path: 'invitations',
+        loadComponent: () =>
+          import('./features/invitations/invitations.component').then(
+            (m) => m.InvitationsComponent,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },
