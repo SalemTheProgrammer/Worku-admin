@@ -119,8 +119,14 @@ export class CompanyDetailComponent implements OnInit {
 
     request.subscribe({
       next: (result) => {
-        const sign = mode === 'grant' ? '+' : '-';
-        this.message.set(`${sign}${this.creditAmount} credits - solde ${result.balance}`);
+        if (mode === 'grant') {
+          this.message.set(`+${this.creditAmount} crédits — solde ${result.balance}`);
+        } else if (result.balance === 0) {
+          // Revoked at least the full balance → clamped to zero.
+          this.message.set(`Crédits révoqués — solde ramené à 0`);
+        } else {
+          this.message.set(`Crédits révoqués — solde ${result.balance}`);
+        }
         this.loadCredits(this.id);
         this.actionLoading.set(false);
       },
